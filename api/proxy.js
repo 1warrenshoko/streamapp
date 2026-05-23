@@ -6,8 +6,10 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const apiPath = (req.url || '').replace(/^\/api/, '');
-  const upstream = `https://streamed.pk/api${apiPath}`;
+  const apiPath = (req.url || '/').replace(/^\/api\/?/, '');
+  const upstream = `https://streamed.pk/api/${apiPath}`;
+
+  console.log('Proxying:', upstream);
 
   try {
     const upstreamRes = await fetch(upstream, {
@@ -21,21 +23,20 @@ export default async function handler(req, res) {
 
     if (!upstreamRes.ok) {
       return res.status(502).json({
-        error: `Upstream API returned ${upstreamRes.status}`,
+        error: `Upstream returned ${upstreamRes.status}`,
         status: upstreamRes.status
       });
     }
 
     const text = await upstreamRes.text();
     try {
-      const data = JSON.parse(text);
-      return res.status(200).json(data);
+      return res.status(200).json(JSON.parse(text));
     } catch {
       return res.status(200).json({ raw: text });
     }
   } catch (err) {
     return res.status(502).json({
-      error: 'Upstream API unreachable',
+      error: 'Upstream unreachable',
       detail: err.message
     });
   }
