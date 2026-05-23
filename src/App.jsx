@@ -152,20 +152,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState(null);
-  const [redirectBlockCount, setRedirectBlockCount] = useState(0);
-  const [sandboxEnabled, setSandboxEnabled] = useState(true);
-
-  useEffect(() => {
-    if (!selectedStream) return;
-    const handler = (e) => {
-      setRedirectBlockCount((c) => c + 1);
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
-    };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [selectedStream]);
 
   const fetchApi = useCallback(async (endpoint) => {
     const res = await fetch(`${API_BASE}${endpoint}`);
@@ -244,7 +230,6 @@ export default function App() {
       setStreams(streamList);
       const hd = streamList.find((s) => s.hd);
       setSelectedStream(hd || streamList[0]);
-      setRedirectBlockCount(0);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -256,7 +241,6 @@ export default function App() {
     setSelectedMatch(null);
     setStreams([]);
     setSelectedStream(null);
-    setRedirectBlockCount(0);
   };
 
   if (initializing) {
@@ -366,26 +350,12 @@ export default function App() {
             <div className="bg-ufc-darker border border-ufc-border rounded-sm overflow-hidden">
               <div className="relative bg-black" style={{ paddingBottom: '56.25%' }}>
                 <iframe
-                  key={selectedStream.embedUrl + (sandboxEnabled ? 'sb' : 'ns')}
                   src={selectedStream.embedUrl}
                   className="absolute inset-0 w-full h-full border-0"
                   allowFullScreen
                   allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                  referrerPolicy="no-referrer"
-                  sandbox={sandboxEnabled ? 'allow-scripts allow-same-origin' : undefined}
                 />
               </div>
-              {sandboxEnabled && (
-                <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2 py-1 bg-black/80 border border-ufc-border/50 rounded-sm">
-                  <svg className="w-3 h-3 text-ufc-gold" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                  </svg>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-ufc-gold">Ads Blocked</span>
-                  {redirectBlockCount > 0 && (
-                    <span className="text-[9px] text-ufc-text">{redirectBlockCount}</span>
-                  )}
-                </div>
-              )}
 
               <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -400,17 +370,6 @@ export default function App() {
                         HD
                       </span>
                     )}
-                    <button
-                      onClick={() => setSandboxEnabled(!sandboxEnabled)}
-                      className={`px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border transition-colors ${
-                        sandboxEnabled
-                          ? 'border-ufc-gold text-ufc-gold'
-                          : 'border-red-500 text-red-400'
-                      }`}
-                      title={sandboxEnabled ? 'Click to disable ad blocking if stream fails to load' : 'Click to re-enable ad blocking'}
-                    >
-                      {sandboxEnabled ? 'AD-BLOCK ON' : 'AD-BLOCK OFF'}
-                    </button>
                   </div>
                 </div>
 
