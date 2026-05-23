@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const API_BASE = '/api';
 
@@ -152,6 +152,31 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [autoReload, setAutoReload] = useState(true);
+  const attemptsRef = useRef(0);
+  const maxAttempts = 10;
+
+  useEffect(() => {
+    if (!selectedStream || !autoReload) return;
+    if (attemptsRef.current >= maxAttempts) return;
+
+    const delays = [2000, 3000, 4000, 6000, 8000, 10000, 10000, 10000, 12000, 12000];
+    const delay = delays[Math.min(attemptsRef.current, delays.length - 1)];
+
+    const timer = setTimeout(() => {
+      attemptsRef.current += 1;
+      setReloadKey((k) => k + 1);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [selectedStream, autoReload, reloadKey]);
+
+  useEffect(() => {
+    attemptsRef.current = 0;
+    setReloadKey(0);
+    setAutoReload(true);
+  }, [selectedStream]);
 
   const fetchApi = useCallback(async (endpoint) => {
     const res = await fetch(`${API_BASE}${endpoint}`);
@@ -350,11 +375,31 @@ export default function App() {
             <div className="bg-ufc-darker border border-ufc-border rounded-sm overflow-hidden">
               <div className="relative bg-black" style={{ paddingBottom: '56.25%' }}>
                 <iframe
+                  key={`${selectedStream.embedUrl}-${reloadKey}`}
                   src={selectedStream.embedUrl}
                   className="absolute inset-0 w-full h-full border-0"
                   allowFullScreen
                   allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 />
+
+                <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5">
+                  <button
+                    onClick={() => { attemptsRef.current = 0; setReloadKey((k) => k + 1); }}
+                    className="px-2 py-1 bg-black/80 border border-ufc-border/50 text-white hover:border-ufc-red/50 text-[10px] font-bold uppercase tracking-widest transition-colors"
+                  >
+                    Reload
+                  </button>
+                  <button
+                    onClick={() => { setAutoReload(!autoReload); if (autoReload) { attemptsRef.current = 0; } }}
+                    className={`px-2 py-1 bg-black/80 border text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                      autoReload
+                        ? 'border-ufc-red/50 text-ufc-red'
+                        : 'border-ufc-border/50 text-ufc-muted'
+                    }`}
+                  >
+                    {autoReload ? `Auto ${attemptsRef.current}/${maxAttempts}` : 'Auto OFF'}
+                  </button>
+                </div>
               </div>
 
               <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
