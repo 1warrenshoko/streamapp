@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API_BASE = '/api';
 
@@ -153,30 +153,6 @@ export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [autoReload, setAutoReload] = useState(true);
-  const attemptsRef = useRef(0);
-  const maxAttempts = 10;
-
-  useEffect(() => {
-    if (!selectedStream || !autoReload) return;
-    if (attemptsRef.current >= maxAttempts) return;
-
-    const delays = [2000, 3000, 4000, 6000, 8000, 10000, 10000, 10000, 12000, 12000];
-    const delay = delays[Math.min(attemptsRef.current, delays.length - 1)];
-
-    const timer = setTimeout(() => {
-      attemptsRef.current += 1;
-      setReloadKey((k) => k + 1);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [selectedStream, autoReload, reloadKey]);
-
-  useEffect(() => {
-    attemptsRef.current = 0;
-    setReloadKey(0);
-    setAutoReload(true);
-  }, [selectedStream]);
 
   const fetchApi = useCallback(async (endpoint) => {
     const res = await fetch(`${API_BASE}${endpoint}`);
@@ -384,20 +360,25 @@ export default function App() {
 
                 <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5">
                   <button
-                    onClick={() => { attemptsRef.current = 0; setReloadKey((k) => k + 1); }}
+                    onClick={() => setReloadKey((k) => k + 1)}
                     className="px-2 py-1 bg-black/80 border border-ufc-border/50 text-white hover:border-ufc-red/50 text-[10px] font-bold uppercase tracking-widest transition-colors"
                   >
                     Reload
                   </button>
+                  <span className="px-1.5 py-1 text-[10px] font-mono text-ufc-text bg-black/80">
+                    {streams.indexOf(selectedStream) + 1}/{streams.length}
+                  </span>
                   <button
-                    onClick={() => { setAutoReload(!autoReload); if (autoReload) { attemptsRef.current = 0; } }}
-                    className={`px-2 py-1 bg-black/80 border text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                      autoReload
-                        ? 'border-ufc-red/50 text-ufc-red'
-                        : 'border-ufc-border/50 text-ufc-muted'
-                    }`}
+                    onClick={() => {
+                      const idx = streams.findIndex(
+                        (s) => (s.id || s.streamNo) === (selectedStream.id || selectedStream.streamNo)
+                      );
+                      const next = streams[(idx + 1) % streams.length];
+                      if (next) setSelectedStream(next);
+                    }}
+                    className="px-2 py-1 bg-black/80 border border-ufc-border/50 text-white hover:border-ufc-red/50 text-[10px] font-bold uppercase tracking-widest transition-colors"
                   >
-                    {autoReload ? `Auto ${attemptsRef.current}/${maxAttempts}` : 'Auto OFF'}
+                    Next
                   </button>
                 </div>
               </div>
