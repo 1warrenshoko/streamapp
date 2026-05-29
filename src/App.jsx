@@ -215,10 +215,7 @@ export default function App() {
         try {
           const data = await fetchApi(`/stream/${source.source}/${source.id}`);
           const list = Array.isArray(data) ? data : [];
-          if (list.length > 0) {
-            streamList = list;
-            break;
-          }
+          streamList = streamList.concat(list);
         } catch {
           continue;
         }
@@ -390,6 +387,7 @@ export default function App() {
                   </h2>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-xs text-ufc-text font-mono">#{selectedStream.streamNo}</span>
+                    <span className="px-1 py-0 text-[10px] font-bold uppercase text-ufc-muted border border-ufc-border rounded-sm">{selectedStream.source}</span>
                     <span className="text-xs text-ufc-muted">{selectedStream.language || 'EN'}</span>
                     {selectedStream.hd && (
                       <span className="px-1.5 py-0.5 bg-ufc-red text-white text-[10px] font-bold uppercase tracking-wider">
@@ -419,7 +417,7 @@ export default function App() {
                           : 'border-ufc-border text-ufc-text hover:text-white hover:border-gray-600'
                       }`}
                     >
-                      #{stream.streamNo} {stream.language || ''} {stream.hd ? 'HD' : ''}
+                      #{stream.streamNo} <span className="text-ufc-muted">{stream.source}</span> {stream.language || ''} {stream.hd ? 'HD' : ''}
                     </button>
                   ))}
                 </div>
