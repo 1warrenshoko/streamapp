@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MatchCard, SkeletonCard } from './components/MatchCard';
+import WatchWall from './components/WatchWall';
 
 const API_BASE = '/api';
 
@@ -14,6 +15,7 @@ export default function App() {
   const [selectedSport, setSelectedSport] = useState('all');
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [mode, setMode] = useState('browse');
   const [streams, setStreams] = useState([]);
   const [selectedStream, setSelectedStream] = useState(null);
   const [viewMode, setViewMode] = useState('live');
@@ -228,6 +230,24 @@ export default function App() {
                   </button>
                 ))}
               </nav>
+              <div className="hidden sm:flex items-center gap-1 border-l border-ufc-border pl-4 ml-2">
+                <button
+                  onClick={() => setMode('browse')}
+                  className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                    mode === 'browse' ? 'text-white' : 'text-ufc-muted hover:text-gray-300'
+                  }`}
+                >
+                  Browse
+                </button>
+                <button
+                  onClick={() => setMode('wall')}
+                  className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                    mode === 'wall' ? 'text-white' : 'text-ufc-muted hover:text-gray-300'
+                  }`}
+                >
+                  WALL
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -290,7 +310,11 @@ export default function App() {
       </header>
 
       <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
-        {/* Video Player */}
+        {mode === 'wall' ? (
+          <WatchWall matches={matches} />
+        ) : (
+          <>
+            {/* Video Player */}
         {selectedStream && selectedMatch && (
           <section className="mb-8 animate-fade-in">
             <div className="bg-ufc-darker border border-ufc-border rounded-sm overflow-hidden">
@@ -428,6 +452,8 @@ export default function App() {
               </div>
             ))}
           </div>
+        )}
+        </>
         )}
       </main>
 
