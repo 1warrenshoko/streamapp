@@ -38,7 +38,7 @@ const PosterFallback = () => (
   </div>
 );
 
-const MatchCard = React.memo(function MatchCard({ match, currentTime, isVisible, miniStream, onSelect, onCardRef }) {
+const MatchCard = React.memo(function MatchCard({ match, currentTime, isVisible, miniStream, onSelect, onCardRef, onMiniFail }) {
   const isLive = new Date(match.date) <= currentTime;
   const posterUrl = match.poster ? `https://streamed.pk${match.poster}` : null;
   const [iframeFailed, setIframeFailed] = useState(false);
@@ -62,7 +62,16 @@ const MatchCard = React.memo(function MatchCard({ match, currentTime, isVisible,
             src={miniStream.embedUrl}
             className="absolute inset-0 w-full h-full border-0"
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-            onError={() => setIframeFailed(true)}
+            onLoad={(e) => {
+              try {
+                const meta = e.target.contentDocument?.querySelector('meta[name="embed-status"]');
+                if (meta?.content === 'dead') {
+                  setIframeFailed(true);
+                  if (onMiniFail) onMiniFail(match.id);
+                }
+              } catch {}
+            }}
+            onError={() => { setIframeFailed(true); if (onMiniFail) onMiniFail(match.id); }}
           />
         ) : posterUrl && !iframeFailed ? (
           <img

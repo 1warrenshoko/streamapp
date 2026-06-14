@@ -221,6 +221,11 @@ export default function App() {
     }
   };
 
+  const handleMiniFail = useCallback((matchId) => {
+    setDeadMatches((prev) => { const s = new Set(prev); s.add(matchId); return s; });
+    setMiniStreams((prev) => { const n = { ...prev }; delete n[matchId]; return n; });
+  }, []);
+
   const closePlayer = () => {
     setSelectedMatch(null);
     setStreams([]);
@@ -498,6 +503,7 @@ export default function App() {
                   isVisible={visibleCards.has(match.id)}
                   miniStream={miniStreams[match.id]}
                   onSelect={fetchStreams}
+                  onMiniFail={handleMiniFail}
                   onCardRef={(el) => { cardRefs.current[match.id] = el; }}
                 />
               </div>

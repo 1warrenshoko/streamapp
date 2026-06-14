@@ -12,11 +12,13 @@ app.use(express.json());
 app.get('/api/proxy', async (req, res, next) => {
   if (!req.query.embed) return next();
 
+  const blankError = '<!DOCTYPE html><html><head><meta name="embed-status" content="dead"></head><body style="margin:0;background:#000"></body></html>';
+
   try {
     const embedPath = decodeURIComponent(req.query.embed);
     const url = `https://embed.st/${embedPath}`;
     console.log(`[${new Date().toLocaleTimeString()}] EMBED ${url}`);
-    const response = await fetch(url, {
+    const upstreamRes = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,*/*',
@@ -25,9 +27,21 @@ app.get('/api/proxy', async (req, res, next) => {
       }
     });
 
-    if (!response.ok) return res.status(502).send('Embed unavailable');
+    const contentType = upstreamRes.headers.get('content-type') || '';
+    const isHtml = contentType.includes('text/html') || contentType.includes('application/xhtml');
 
-    let html = await response.text();
+    if (!upstreamRes.ok || !isHtml) {
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(blankError);
+    }
+
+    let html = await upstreamRes.text();
+
+    if (html.trim().startsWith('{') || html.trim().startsWith('[')) {
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(blankError);
+    }
+
     html = html.replace(/<head[^>]*>/i, (m) => m + `
 <script>
 (function(){
@@ -67,7 +81,8 @@ app.get('/api/proxy', async (req, res, next) => {
     return res.send(html);
   } catch (err) {
     console.error('[EMBED ERROR]', err.message);
-    return res.status(502).json({ error: 'Embed unreachable', detail: err.message });
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(blankError);
   }
 });
 

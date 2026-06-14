@@ -83,6 +83,8 @@ async function handleEmbed(req, res) {
   const embedPath = decodeURIComponent(req.query.embed);
   const upstream = `https://embed.st/${embedPath}`;
 
+  const blankError = '<!DOCTYPE html><html><head><meta name="embed-status" content="dead"></head><body style="margin:0;background:#000"></body></html>';
+
   try {
     const upstreamRes = await fetch(upstream, {
       headers: {
@@ -93,20 +95,29 @@ async function handleEmbed(req, res) {
       }
     });
 
-    if (!upstreamRes.ok) {
-      return res.status(502).send('Embed unavailable');
+    const contentType = upstreamRes.headers.get('content-type') || '';
+    const isHtml = contentType.includes('text/html') || contentType.includes('application/xhtml');
+
+    if (!upstreamRes.ok || !isHtml) {
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(blankError);
     }
 
     let html = await upstreamRes.text();
+
+    if (html.trim().startsWith('{') || html.trim().startsWith('[')) {
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(blankError);
+    }
 
     html = html.replace(/<head[^>]*>/i, function(m) {
       return m + AUTO_CLICK;
     });
 
     res.setHeader('Content-Type', 'text/html');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     return res.status(200).send(html);
   } catch (err) {
-    return res.status(502).json({ error: 'Embed unreachable', detail: err.message });
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(200).send(blankError);
   }
 }
