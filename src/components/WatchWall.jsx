@@ -34,7 +34,7 @@ function WatchWall({ matches }) {
       {slots.map((match, i) => (
         <div
           key={i}
-          className="bg-ufc-card border border-ufc-border rounded-sm overflow-hidden"
+          className="bg-white dark:bg-ufc-card border border-gray-200 dark:border-ufc-border rounded-sm overflow-hidden transition-colors"
         >
           {match && slotStreams[i] ? (
             <div className="relative">
@@ -59,8 +59,8 @@ function WatchWall({ matches }) {
               </div>
             </div>
           ) : (
-            <div className="aspect-video bg-ufc-darker flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed border-ufc-border">
-              <span className="text-ufc-muted text-[10px] font-bold uppercase tracking-widest">
+            <div className="aspect-video bg-gray-100 dark:bg-ufc-darker flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 dark:border-ufc-border">
+              <span className="text-gray-400 dark:text-ufc-muted text-[10px] font-bold uppercase tracking-widest">
                 {match ? 'Loading...' : 'Pick a stream'}
               </span>
               {match && (
@@ -74,7 +74,7 @@ function WatchWall({ matches }) {
             </div>
           )}
 
-          <div className="p-2 border-t border-ufc-border">
+          <div className="p-2 border-t border-gray-200 dark:border-ufc-border">
             <select
               value={match?.id || ''}
               onChange={(e) => {
@@ -83,7 +83,7 @@ function WatchWall({ matches }) {
                 const m = matches.find((x) => x.id === id);
                 if (m) assignMatch(i, m);
               }}
-              className="w-full bg-ufc-surface border border-ufc-border text-white text-[10px] font-bold uppercase p-1.5 focus:outline-none focus:border-ufc-red"
+              className="w-full bg-gray-50 dark:bg-ufc-surface border border-gray-300 dark:border-ufc-border text-gray-900 dark:text-white text-[10px] font-bold uppercase p-1.5 focus:outline-none focus:border-ufc-red"
             >
               <option value="">— Select —</option>
               {matches.map((m) => (
