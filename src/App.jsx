@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MatchCard, SkeletonCard } from './components/MatchCard';
 import WatchWall from './components/WatchWall';
 
-const API_BASE = '/proxy';
+const API_BASE = '/api/proxy';
 
 const TABS = [
   { id: 'live', label: 'LIVE NOW' },
@@ -69,7 +69,8 @@ export default function App() {
   }, []);
 
   const fetchApi = useCallback(async (endpoint) => {
-    const res = await fetch(`${API_BASE}${endpoint}`);
+    const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const res = await fetch(`${API_BASE}?__path=${encodeURIComponent(path)}`);
     if (!res.ok) throw new Error(`API error ${res.status}`);
     return res.json();
   }, []);

@@ -1,7 +1,4 @@
 {
   "buildCommand": "vite build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/proxy/:path*", "destination": "/api/proxy?__path=$path" }
-  ]
+  "outputDirectory": "dist"
 }

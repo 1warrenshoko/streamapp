@@ -7,10 +7,14 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     proxy: {
-      '/proxy': {
+      '/api/proxy': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy/, '/api')
+        rewrite: (path) => {
+          const url = new URL(path, 'http://localhost');
+          const apiPath = url.searchParams.get('__path') || '';
+          return '/api/' + apiPath;
+        }
       }
     }
   }
