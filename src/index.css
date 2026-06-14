@@ -66,3 +66,32 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+.match-card {
+  contain: layout style paint;
+}
+
+@media (min-height: 600px) {
+  .match-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 280px;
+  }
+}
+
+.blur-up {
+  filter: blur(10px);
+  transition: filter 0.4s ease-out;
+}
+
+.blur-up[src] {
+  filter: blur(0);
+}
+
+@keyframes slot-pulse {
+  0%, 100% { border-color: rgba(255,255,255,0.08); }
+  50% { border-color: rgba(210,10,10,0.15); }
+}
+
+.watch-wall-slot-loading {
+  animation: slot-pulse 2s ease-in-out infinite;
+}
