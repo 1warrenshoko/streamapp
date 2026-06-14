@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MatchCard, SkeletonCard } from './components/MatchCard';
 
 const API_BASE = '/api';
@@ -22,10 +22,37 @@ export default function App() {
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [visibleCards, setVisibleCards] = useState(new Set());
+  const [miniStreams, setMiniStreams] = useState({});
+  const cardRefs = useRef({});
+  const observerRef = useRef(null);
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        setVisibleCards((prev) => {
+          const next = new Set(prev);
+          entries.forEach((entry) => {
+            const id = entry.target.dataset.matchId;
+            if (!id) return;
+            if (entry.isIntersecting) {
+              next.add(id);
+            } else {
+              next.delete(id);
+            }
+          });
+          return next;
+        });
+      },
+      { rootMargin: '100px', threshold: 0.0 }
+    );
+
+    return () => observerRef.current?.disconnect();
   }, []);
 
   const fetchApi = useCallback(async (endpoint) => {
@@ -71,6 +98,53 @@ export default function App() {
       .catch((err) => { setError(err.message); setMatches([]); })
       .finally(() => setLoading(false));
   }, [viewMode, selectedSport, initializing, fetchApi]);
+
+  useEffect(() => {
+    const obs = observerRef.current;
+    if (!obs) return;
+    Object.values(cardRefs.current).forEach((el) => {
+      if (el) obs.observe(el);
+    });
+    return () => {
+      Object.values(cardRefs.current).forEach((el) => {
+        if (el) obs?.unobserve(el);
+      });
+    };
+  }, [matches]);
+
+  const miniTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (miniTimerRef.current) clearTimeout(miniTimerRef.current);
+    miniTimerRef.current = setTimeout(() => {
+      setMiniStreams((prev) => {
+        const next = {};
+        const visibleArr = Array.from(visibleCards).slice(0, 6);
+        visibleArr.forEach((id) => {
+          if (prev[id]) {
+            next[id] = prev[id];
+          } else {
+            const match = matches.find((m) => m.id === id);
+            if (match && match.sources?.length > 0) {
+              next[id] = { embedUrl: null, loading: true };
+              const source = match.sources[0];
+              fetchApi(`/stream/${source.source}/${source.id}`)
+                .then((data) => {
+                  const list = Array.isArray(data) ? data : [];
+                  if (list.length > 0) {
+                    setMiniStreams((p) => ({ ...p, [id]: { embedUrl: list[0].embedUrl, loading: false } }));
+                  }
+                })
+                .catch(() => {});
+            }
+          }
+        });
+        return next;
+      });
+    }, 300);
+
+    return () => clearTimeout(miniTimerRef.current);
+  }, [visibleCards, matches, fetchApi]);
 
   const fetchStreams = async (match) => {
     setSelectedMatch(match);
@@ -341,9 +415,16 @@ export default function App() {
         {/* Matches grid */}
         {!loading && matches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {matches.map((match, i) => (
-              <div key={match.id || i} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
-                <MatchCard match={match} currentTime={currentTime} onSelect={fetchStreams} />
+            {matches.map((match) => (
+              <div key={match.id} className="animate-fade-in">
+                <MatchCard
+                  match={match}
+                  currentTime={currentTime}
+                  isVisible={visibleCards.has(match.id)}
+                  miniStream={miniStreams[match.id]}
+                  onSelect={fetchStreams}
+                  onCardRef={(el) => { cardRefs.current[match.id] = el; }}
+                />
               </div>
             ))}
           </div>
