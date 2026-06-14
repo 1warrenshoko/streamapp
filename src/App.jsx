@@ -8,16 +8,9 @@ const TABS = [
   { id: 'all', label: 'ALL EVENTS' }
 ];
 
-function CountdownBadge({ timestamp }) {
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+function CountdownBadge({ timestamp, currentTime }) {
   const date = new Date(timestamp);
-  const diff = date - now;
+  const diff = date - currentTime;
 
   if (diff <= 0) {
     return (
@@ -72,7 +65,7 @@ function MatchCard({ match, onSelect }) {
 
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <CountdownBadge timestamp={match.date} />
+          <CountdownBadge timestamp={match.date} currentTime={currentTime} />
           <span className="text-[10px] font-bold uppercase tracking-widest text-ufc-muted px-2 py-0.5 border border-ufc-border rounded-sm">
             {match.category || 'EVENT'}
           </span>
@@ -153,6 +146,12 @@ export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const fetchApi = useCallback(async (endpoint) => {
     const res = await fetch(`${API_BASE}${endpoint}`);
@@ -469,7 +468,7 @@ export default function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {matches.map((match, i) => (
               <div key={match.id || i} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
-                <MatchCard match={match} onSelect={fetchStreams} />
+                <MatchCard match={match} currentTime={currentTime} onSelect={fetchStreams} />
               </div>
             ))}
           </div>
