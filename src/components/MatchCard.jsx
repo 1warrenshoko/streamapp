@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 function CountdownBadge({ timestamp, currentTime }) {
   const date = new Date(timestamp);
@@ -41,6 +41,9 @@ const PosterFallback = () => (
 const MatchCard = React.memo(function MatchCard({ match, currentTime, isVisible, miniStream, onSelect, onCardRef }) {
   const isLive = new Date(match.date) <= currentTime;
   const posterUrl = match.poster ? `https://streamed.pk${match.poster}` : null;
+  const [iframeFailed, setIframeFailed] = useState(false);
+
+  const showIframe = isVisible && miniStream && !miniStream.loading && !iframeFailed;
 
   return (
     <div
@@ -51,13 +54,17 @@ const MatchCard = React.memo(function MatchCard({ match, currentTime, isVisible,
     >
       {/* Poster or mini-iframe */}
       <div className="relative aspect-video bg-gray-100 dark:bg-ufc-darker overflow-hidden">
-        {isVisible && miniStream ? (
+        {isVisible && miniStream?.loading && (
+          <div className="absolute inset-0 skeleton" />
+        )}
+        {showIframe ? (
           <iframe
             src={miniStream.embedUrl}
             className="absolute inset-0 w-full h-full border-0"
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            onError={() => setIframeFailed(true)}
           />
-        ) : posterUrl ? (
+        ) : posterUrl && !iframeFailed ? (
           <img
             src={posterUrl}
             alt=""

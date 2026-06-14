@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-function WatchWall({ matches }) {
+const API_BASE = '/api/proxy';
+
+function WatchWall() {
   const [slots, setSlots] = useState(Array(6).fill(null));
   const [slotStreams, setSlotStreams] = useState({});
+  const [slotStreamIdx, setSlotStreamIdx] = useState({});
+  const [allMatches, setAllMatches] = useState([]);
+  const [loadingMatches, setLoadingMatches] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}?__path=matches%2Flive`)
+      .then((res) => res.json())
+      .then((data) => setAllMatches(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setLoadingMatches(false));
+  }, []);
 
   const assignMatch = async (slotIndex, match) => {
     const newSlots = [...slots];
@@ -11,15 +24,26 @@ function WatchWall({ matches }) {
 
     if (!match || !match.sources?.length) return;
 
-    try {
-      const source = match.sources[0];
-      const res = await fetch(`/api/stream/${source.source}/${source.id}`);
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : [];
-      if (list.length > 0) {
-        setSlotStreams((prev) => ({ ...prev, [slotIndex]: list[0] }));
-      }
-    } catch {}
+    let allStreams = [];
+    for (const source of match.sources) {
+      try {
+        const res = await fetch(`${API_BASE}?__path=${encodeURIComponent(`stream/${source.source}/${source.id}`)}`);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        allStreams = allStreams.concat(list);
+      } catch {}
+    }
+
+    if (allStreams.length > 0) {
+      const withAutoplay = (url) => {
+        if (!url) return url;
+        const sep = url.includes('?') ? '&' : '?';
+        return url + sep + 'autoplay=1&muted=1';
+      };
+      const streamsWithAp = allStreams.map((s) => ({ ...s, embedUrl: withAutoplay(s.embedUrl) }));
+      setSlotStreams((prev) => ({ ...prev, [slotIndex]: streamsWithAp }));
+      setSlotStreamIdx((prev) => ({ ...prev, [slotIndex]: 0 }));
+    }
   };
 
   const clearSlot = (slotIndex) => {
@@ -27,7 +51,27 @@ function WatchWall({ matches }) {
     newSlots[slotIndex] = null;
     setSlots(newSlots);
     setSlotStreams((prev) => { const n = { ...prev }; delete n[slotIndex]; return n; });
+    setSlotStreamIdx((prev) => { const n = { ...prev }; delete n[slotIndex]; return n; });
   };
+
+  const cycleStream = (slotIndex, direction) => {
+    const streams = slotStreams[slotIndex];
+    if (!streams || streams.length <= 1) return;
+    setSlotStreamIdx((prev) => {
+      const current = prev[slotIndex] || 0;
+      const next = (current + direction + streams.length) % streams.length;
+      return { ...prev, [slotIndex]: next };
+    });
+  };
+
+  if (loadingMatches) {
+    return (
+      <div className="text-center py-20">
+        <div className="w-10 h-10 rounded-full border-2 border-ufc-border border-t-ufc-red animate-spin mx-auto mb-3" />
+        <p className="font-oswald text-ufc-text uppercase tracking-widest text-xs">Loading streams</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -40,11 +84,31 @@ function WatchWall({ matches }) {
             <div className="relative">
               <div className="relative aspect-video bg-black">
                 <iframe
-                  src={slotStreams[i].embedUrl}
+                  key={`${match.id}-${slotStreamIdx[i] || 0}`}
+                  src={slotStreams[i][slotStreamIdx[i] || 0]?.embedUrl}
                   className="absolute inset-0 w-full h-full border-0"
                   allowFullScreen
                   allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 />
+                {slotStreams[i].length > 1 && (
+                  <div className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1">
+                    <button
+                      onClick={() => cycleStream(i, -1)}
+                      className="px-1.5 py-0.5 bg-black/80 border border-ufc-border/50 text-white hover:border-ufc-red/50 text-[9px] font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Prev
+                    </button>
+                    <span className="px-1 text-[9px] font-mono text-ufc-text bg-black/80">
+                      {(slotStreamIdx[i] || 0) + 1}/{slotStreams[i].length}
+                    </span>
+                    <button
+                      onClick={() => cycleStream(i, 1)}
+                      className="px-1.5 py-0.5 bg-black/80 border border-ufc-border/50 text-white hover:border-ufc-red/50 text-[9px] font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="p-2 flex items-center justify-between">
                 <span className="text-[10px] font-oswald font-bold uppercase text-white truncate">
@@ -80,17 +144,21 @@ function WatchWall({ matches }) {
               onChange={(e) => {
                 const id = e.target.value;
                 if (!id) { clearSlot(i); return; }
-                const m = matches.find((x) => x.id === id);
+                const m = allMatches.find((x) => x.id === id);
                 if (m) assignMatch(i, m);
               }}
-              className="w-full bg-gray-50 dark:bg-ufc-surface border border-gray-300 dark:border-ufc-border text-gray-900 dark:text-white text-[10px] font-bold uppercase p-1.5 focus:outline-none focus:border-ufc-red"
+              className="w-full bg-gray-50 dark:bg-ufc-surface border border-gray-300 dark:border-ufc-border text-gray-900 dark:text-white text-[10px] font-bold uppercase p-1.5 focus:outline-none focus:border-ufc-red max-h-48 overflow-y-auto"
             >
-              <option value="">— Select —</option>
-              {matches.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title || m.teams?.home?.name || m.category}
-                </option>
-              ))}
+              <option value="">— {allMatches.length} streams —</option>
+              {allMatches.map((m) => {
+                const label = m.title || m.teams?.home?.name || m.category || 'Event';
+                const sport = m.category ? ` [${m.category}]` : '';
+                return (
+                  <option key={m.id} value={m.id}>
+                    {label}{sport} {m.sources?.length ? ` (${m.sources.length})` : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

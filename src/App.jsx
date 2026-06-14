@@ -26,8 +26,15 @@ export default function App() {
   const [visibleCards, setVisibleCards] = useState(new Set());
   const [miniStreams, setMiniStreams] = useState({});
   const [reloadKey, setReloadKey] = useState(0);
+  const [deadMatches, setDeadMatches] = useState(new Set());
   const cardRefs = useRef({});
   const observerRef = useRef(null);
+
+  const withAutoplay = (url) => {
+    if (!url) return url;
+    const sep = url.includes('?') ? '&' : '?';
+    return url + sep + 'autoplay=1&muted=1';
+  };
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') || 'dark';
@@ -146,10 +153,21 @@ export default function App() {
                 .then((data) => {
                   const list = Array.isArray(data) ? data : [];
                   if (list.length > 0) {
-                    setMiniStreams((p) => ({ ...p, [id]: { embedUrl: list[0].embedUrl, loading: false } }));
+                    const url = withAutoplay(list[0].embedUrl);
+                    setMiniStreams((p) => ({ ...p, [id]: { embedUrl: url, loading: false } }));
+                  } else {
+                    setMiniStreams((p) => {
+                      const n = { ...p }; delete n[id]; return n;
+                    });
+                    setDeadMatches((prev) => { const s = new Set(prev); s.add(id); return s; });
                   }
                 })
-                .catch(() => {});
+                .catch(() => {
+                  setMiniStreams((p) => {
+                    const n = { ...p }; delete n[id]; return n;
+                  });
+                  setDeadMatches((prev) => { const s = new Set(prev); s.add(id); return s; });
+                });
             }
           }
         });
@@ -187,9 +205,10 @@ export default function App() {
         throw new Error('No streams available');
       }
 
-      setStreams(streamList);
-      const hd = streamList.find((s) => s.hd);
-      setSelectedStream(hd || streamList[0]);
+      const streamsWithAp = streamList.map((s) => ({ ...s, embedUrl: withAutoplay(s.embedUrl) }));
+      setStreams(streamsWithAp);
+      const hd = streamsWithAp.find((s) => s.hd);
+      setSelectedStream(hd || streamsWithAp[0]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -338,7 +357,7 @@ export default function App() {
 
       <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
         {mode === 'wall' ? (
-          <WatchWall matches={matches} />
+          <WatchWall />
         ) : (
           <>
             {/* Video Player */}
@@ -466,7 +485,7 @@ export default function App() {
         {/* Matches grid */}
         {!loading && matches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {matches.map((match) => (
+            {matches.filter((m) => !deadMatches.has(m.id)).map((match) => (
               <div key={match.id} className="animate-fade-in">
                 <MatchCard
                   match={match}
