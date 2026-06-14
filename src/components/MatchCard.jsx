@@ -46,7 +46,7 @@ const MatchCard = React.memo(function MatchCard({ match, currentTime, isVisible,
     <div
       ref={onCardRef}
       data-match-id={match.id}
-      className="match-card relative bg-ufc-card border border-ufc-border rounded-sm overflow-hidden"
+      className="match-card group relative bg-ufc-card border border-ufc-border rounded-sm overflow-hidden"
       style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 280px' }}
     >
       {/* Poster or mini-iframe */}
