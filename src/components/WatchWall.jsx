@@ -35,12 +35,13 @@ function WatchWall() {
     }
 
     if (allStreams.length > 0) {
-      const withAutoplay = (url) => {
+      const embedProxy = (url) => {
         if (!url) return url;
-        const sep = url.includes('?') ? '&' : '?';
-        return url + sep + 'autoplay=1&muted=1';
+        const match = url.match(/embedsports\.top\/(.+)$/);
+        if (match) return `${API_BASE}?embed=${encodeURIComponent(match[1])}`;
+        return url;
       };
-      const streamsWithAp = allStreams.map((s) => ({ ...s, embedUrl: withAutoplay(s.embedUrl) }));
+      const streamsWithAp = allStreams.map((s) => ({ ...s, embedUrl: embedProxy(s.embedUrl) }));
       setSlotStreams((prev) => ({ ...prev, [slotIndex]: streamsWithAp }));
       setSlotStreamIdx((prev) => ({ ...prev, [slotIndex]: 0 }));
     }

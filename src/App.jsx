@@ -30,10 +30,13 @@ export default function App() {
   const cardRefs = useRef({});
   const observerRef = useRef(null);
 
-  const withAutoplay = (url) => {
+  const embedProxy = (url) => {
     if (!url) return url;
-    const sep = url.includes('?') ? '&' : '?';
-    return url + sep + 'autoplay=1&muted=1';
+    const match = url.match(/embedsports\.top\/(.+)$/);
+    if (match) {
+      return `${API_BASE}?embed=${encodeURIComponent(match[1])}`;
+    }
+    return url;
   };
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -153,7 +156,7 @@ export default function App() {
                 .then((data) => {
                   const list = Array.isArray(data) ? data : [];
                   if (list.length > 0) {
-                    const url = withAutoplay(list[0].embedUrl);
+                    const url = embedProxy(list[0].embedUrl);
                     setMiniStreams((p) => ({ ...p, [id]: { embedUrl: url, loading: false } }));
                   } else {
                     setMiniStreams((p) => {
@@ -202,14 +205,16 @@ export default function App() {
       }
 
       if (streamList.length === 0) {
+        setDeadMatches((prev) => { const s = new Set(prev); s.add(match.id); return s; });
         throw new Error('No streams available');
       }
 
-      const streamsWithAp = streamList.map((s) => ({ ...s, embedUrl: withAutoplay(s.embedUrl) }));
+      const streamsWithAp = streamList.map((s) => ({ ...s, embedUrl: embedProxy(s.embedUrl) }));
       setStreams(streamsWithAp);
       const hd = streamsWithAp.find((s) => s.hd);
       setSelectedStream(hd || streamsWithAp[0]);
     } catch (err) {
+      setDeadMatches((prev) => { const s = new Set(prev); s.add(match.id); return s; });
       setError(err.message);
     } finally {
       setLoading(false);

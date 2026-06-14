@@ -12,6 +12,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => {
           const url = new URL(path, 'http://localhost');
+          const embed = url.searchParams.get('embed');
+          if (embed) {
+            return '/api/proxy?embed=' + encodeURIComponent(embed);
+          }
           const apiPath = url.searchParams.get('__path') || '';
           return '/api/' + apiPath;
         }
