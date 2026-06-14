@@ -37,7 +37,7 @@ function WatchWall() {
     if (allStreams.length > 0) {
       const embedProxy = (url) => {
         if (!url) return url;
-        const match = url.match(/embedsports\.top\/(.+)$/);
+        const match = url.match(/(?:embed\.st|embedsports\.top)\/(.+)$/);
         if (match) return `${API_BASE}?embed=${encodeURIComponent(match[1])}`;
         return url;
       };

@@ -14,16 +14,14 @@ app.get('/api/proxy', async (req, res, next) => {
 
   try {
     const embedPath = decodeURIComponent(req.query.embed);
-    const url = `https://embedsports.top/${embedPath}`;
-
+    const url = `https://embed.st/${embedPath}`;
     console.log(`[${new Date().toLocaleTimeString()}] EMBED ${url}`);
-
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,*/*',
-        'Referer': 'https://embedsports.top/',
-        'Origin': 'https://embedsports.top'
+        'Referer': 'https://embed.st/',
+        'Origin': 'https://embed.st'
       }
     });
 

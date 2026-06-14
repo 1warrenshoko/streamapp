@@ -81,15 +81,15 @@ export default async function handler(req, res) {
 
 async function handleEmbed(req, res) {
   const embedPath = decodeURIComponent(req.query.embed);
-  const upstream = `https://embedsports.top/${embedPath}`;
+  const upstream = `https://embed.st/${embedPath}`;
 
   try {
     const upstreamRes = await fetch(upstream, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,*/*',
-        'Referer': 'https://embedsports.top/',
-        'Origin': 'https://embedsports.top'
+        'Referer': 'https://embed.st/',
+        'Origin': 'https://embed.st'
       }
     });
 
