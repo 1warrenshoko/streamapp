@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MatchCard, SkeletonCard } from './components/MatchCard';
 import WatchWall from './components/WatchWall';
 
-const API_BASE = '/api';
+const API_BASE = '/proxy';
 
 const TABS = [
   { id: 'live', label: 'LIVE NOW' },
