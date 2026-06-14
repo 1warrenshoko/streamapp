@@ -104,13 +104,16 @@ export default function App() {
     setSelectedStream(null);
 
     let endpoint;
-    if (viewMode === 'live') endpoint = '/matches/live';
-    else if (viewMode === 'today') endpoint = '/matches/all-today';
+    if (viewMode === 'today') endpoint = '/matches/all-today';
     else endpoint = '/matches/all';
 
     fetchApi(endpoint)
       .then((data) => {
         let results = Array.isArray(data) ? data : [];
+        if (viewMode === 'live') {
+          const now = Date.now();
+          results = results.filter((m) => m.date <= now);
+        }
         if (selectedSport !== 'all') {
           const sportId = selectedSport.toLowerCase();
           results = results.filter((m) =>
@@ -249,9 +252,12 @@ export default function App() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-6">
-              <h1 className="font-oswald text-2xl font-bold uppercase tracking-tighter text-white">
+              <button
+                onClick={() => { setViewMode('live'); setSelectedSport('all'); setMode('browse'); setSelectedMatch(null); setStreams([]); setSelectedStream(null); setError(null); }}
+                className="font-oswald text-2xl font-bold uppercase tracking-tighter text-white hover:text-ufc-red transition-colors"
+              >
                 STREAM<span className="text-ufc-red">.</span>
-              </h1>
+              </button>
 
               <nav className="hidden sm:flex items-center gap-1">
                 {TABS.map((tab) => (
