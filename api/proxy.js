@@ -139,7 +139,7 @@ async function handleEmbed(req, res) {
       return res.status(200).send(blankError);
     }
 
-    html = html.replace(/<head[^>]*>/i, function(m) {
+    html = html.replace(/(<meta[^>]*>)/i, function(m) {
       return m + AUTO_CLICK;
     });
 

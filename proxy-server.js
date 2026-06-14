@@ -42,7 +42,7 @@ app.get('/api/proxy', async (req, res, next) => {
       return res.send(blankError);
     }
 
-    html = html.replace(/<head[^>]*>/i, (m) => m + `
+    html = html.replace(/(<meta[^>]*>)/i, (m) => m + `
 <script>
 (function(){
   var done=false;
