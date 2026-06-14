@@ -6,10 +6,9 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const apiPath = '/' + (req.query.path || '');
+  const segments = req.query.path || [];
+  const apiPath = '/' + (Array.isArray(segments) ? segments.join('/') : String(segments));
   const upstream = `https://streamed.pk/api${apiPath}`;
-
-  console.log('Proxying:', upstream);
 
   try {
     const upstreamRes = await fetch(upstream, {
