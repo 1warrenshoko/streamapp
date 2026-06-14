@@ -51,8 +51,8 @@ function SkeletonCard() {
   );
 }
 
-function MatchCard({ match, onSelect }) {
-  const isLive = new Date(match.date) <= Date.now();
+function MatchCard({ match, currentTime, onSelect }) {
+  const isLive = new Date(match.date) <= currentTime;
 
   return (
     <button
