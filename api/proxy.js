@@ -6,8 +6,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const apiPath = (req.url || '/').replace(/^\/api\/?/, '');
-  const upstream = `https://streamed.pk/api/${apiPath}`;
+  const apiPath = '/' + (req.query.path || '');
+  const upstream = `https://streamed.pk/api${apiPath}`;
 
   console.log('Proxying:', upstream);
 
