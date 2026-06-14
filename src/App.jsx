@@ -16,6 +16,18 @@ export default function App() {
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [mode, setMode] = useState('browse');
+  const [viewMode, setViewMode] = useState('live');
+  const [initializing, setInitializing] = useState(true);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [streams, setStreams] = useState([]);
+  const [selectedStream, setSelectedStream] = useState(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [visibleCards, setVisibleCards] = useState(new Set());
+  const [miniStreams, setMiniStreams] = useState({});
+  const [reloadKey, setReloadKey] = useState(0);
+  const cardRefs = useRef({});
+  const observerRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') || 'dark';
