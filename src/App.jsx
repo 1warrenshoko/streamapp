@@ -192,10 +192,10 @@ export default function App() {
 
   if (initializing) {
     return (
-      <div className="min-h-screen bg-ufc-black flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-ufc-black flex items-center justify-center transition-colors">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-2 border-ufc-border border-t-ufc-red animate-spin mx-auto mb-4" />
-          <p className="font-oswald text-ufc-text uppercase tracking-widest text-sm">Loading</p>
+          <div className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-ufc-border border-t-ufc-red animate-spin mx-auto mb-4" />
+          <p className="font-oswald text-gray-400 dark:text-ufc-text uppercase tracking-widest text-sm">Loading</p>
         </div>
       </div>
     );
@@ -445,7 +445,7 @@ export default function App() {
               <rect x="2" y="3" width="20" height="14" rx="2" />
               <path d="M8 21h8M12 17v4" />
             </svg>
-            <p className="font-oswald text-xl text-white uppercase tracking-wider mb-1">No events found</p>
+            <p className="font-oswald text-xl text-gray-900 dark:text-white uppercase tracking-wider mb-1">No events found</p>
             <p className="text-ufc-text text-sm">Try a different category or check back later</p>
           </div>
         )}
@@ -471,9 +471,9 @@ export default function App() {
         )}
       </main>
 
-      <footer className="border-t border-ufc-border py-6 px-4">
+      <footer className="border-t border-gray-200 dark:border-ufc-border py-6 px-4 transition-colors">
         <div className="max-w-[1400px] mx-auto text-center">
-          <p className="text-[10px] text-ufc-muted uppercase tracking-widest">
+          <p className="text-[10px] text-gray-400 dark:text-ufc-muted uppercase tracking-widest">
             Streams sourced from third-party providers. Availability may vary.
           </p>
         </div>
