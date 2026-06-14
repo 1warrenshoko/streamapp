@@ -1,9 +1,15 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const apiPath = req.query.__path || '';
+  const apiPath = req.query.__path
+    || (req.url || '').replace(/^\/api\/?(?:proxy)?\/?/, '')
+    || '';
+
+  if (!apiPath) {
+    return res.status(400).json({ error: 'No API path specified' });
+  }
+
   const upstream = `https://streamed.pk/api/${apiPath}`;
 
   try {
